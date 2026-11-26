@@ -15,10 +15,22 @@
 
 <header>
     <div>
-        <h1>Circle Match!</h1>
+        <h1>Finger Match!</h1>
         <div id="instructions">
-            How many circles can you match?
+            How many fingers can you match?
         </div>
+    </div>
+
+    <div class="level-selector">
+        <button class="level-btn active" onclick="setLevel(4, this)">
+            1–4
+        </button>
+        <button class="level-btn" onclick="setLevel(6, this)">
+            1–6
+        </button>
+        <button class="level-btn" onclick="setLevel(8, this)">
+            1–8
+        </button>
     </div>
 
     <button onclick="newRound()">New Round ↻</button>
