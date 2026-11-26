@@ -241,8 +241,6 @@ function newRound() {
     success.classList.remove("show");
     game.querySelectorAll(".circle").forEach(c => c.remove());
 
-    counter.textContent = ""
-
     createCircles();
 }
 
@@ -316,9 +314,6 @@ game.addEventListener("pointercancel", removeFinger);
 // Update the live count
 function updateFingerCount() {
     const count = activePointers.size;
-
-    counter.textContent = "";
-
     if (count === targetCount) {
         celebrate();
     }
