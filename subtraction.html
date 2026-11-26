@@ -1,32 +1,29 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
 <title>Subtraction</title>
-
 <link href="style.css" rel="stylesheet"/>
 
 <style>
-/* Two sides of the subtraction game */
+/* Keep the original Finger Match page layout; only arrange the two groups. */
 #game {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 24px;
-    position: relative;
     touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #match-board {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-    max-width: 1100px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: min(100%, 1100px);
     min-height: 180px;
 }
 
@@ -35,8 +32,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 12px;
     min-width: 0;
+    padding: 12px;
 }
 
 .side + .side {
@@ -44,26 +41,41 @@
 }
 
 .side-label {
+    margin-bottom: 18px;
+    color: #7655c9;
     font-size: 20px;
     font-weight: bold;
-    color: #7655c9;
-    margin-bottom: 18px;
 }
 
-.circle-row {
+.circle-rows {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    flex-wrap: wrap;
+    justify-content: center;
     gap: 10px;
-    min-height: 65px;
     width: 100%;
 }
 
+/* Each explicit row contains no more than five circles. */
+.circle-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 45px;
+}
+
+/* Match the 45px circle size used in the original game. */
 .circle {
+    display: block;
+    position: relative;
+    flex: 0 0 80px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    flex-shrink: 0;
-    transition: transform 0.3s, opacity 0.3s;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .circle.removing {
@@ -71,18 +83,52 @@
     opacity: 0;
 }
 
-#counter {
-    text-align: center;
-    min-height: 30px;
-    font-size: 22px;
-}
-
+/* A circular progress ring, using the same purple as the original game. */
 #hold-wheel {
-    position: relative;
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
 }
 
 #wheel-inner {
-    transform-origin: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: conic-gradient(#7655c9 0deg, #e8e2f5 0deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px));
+}
+
+#counter {
+    min-height: 30px;
+    text-align: center;
+}
+
+#success {
+    z-index: 10;
+}
+
+.confetti {
+    position: fixed;
+    top: -16px;
+    width: 12px;
+    height: 18px;
+    z-index: 20;
+    pointer-events: none;
+    animation: confetti-fall 2.8s linear forwards;
+}
+
+@keyframes confetti-fall {
+    to {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+html, body {
+    touch-action: none;
 }
 
 @media (max-width: 600px) {
@@ -100,12 +146,16 @@
     }
 
     .side-label {
-        font-size: 17px;
         margin-bottom: 12px;
+        font-size: 17px;
     }
 
     .circle-row {
         gap: 6px;
+    }
+
+    .circle-rows {
+        gap: 8px;
     }
 }
 </style>
@@ -122,15 +172,9 @@
     </div>
 
     <div class="level-selector">
-        <button class="level-btn active" onclick="setLevel(2, this)">
-            LvL 1
-        </button>
-        <button class="level-btn" onclick="setLevel(4, this)">
-            LvL 2
-        </button>
-        <button class="level-btn" onclick="setLevel(8, this)">
-            LvL 3
-        </button>
+        <button class="level-btn active" onclick="setLevel(1, this)">LvL 1</button>
+        <button class="level-btn" onclick="setLevel(2, this)">LvL 2</button>
+        <button class="level-btn" onclick="setLevel(3, this)">LvL 3</button>
     </div>
 
     <button onclick="newRound()">New Round ↻</button>
@@ -144,25 +188,20 @@
 </nav>
 
 <main id="game">
-
     <div id="match-board">
         <div class="side">
             <div class="side-label">Left</div>
-            <div class="circle-row" id="left-circles"></div>
+            <div class="circle-rows" id="left-circles"></div>
         </div>
 
         <div class="side">
             <div class="side-label">Right</div>
-            <div class="circle-row" id="right-circles"></div>
+            <div class="circle-rows" id="right-circles"></div>
         </div>
     </div>
 
     <div id="counter">Get ready!</div>
-
-    <div id="hold-wheel">
-        <div id="wheel-inner"></div>
-    </div>
-
+    <div id="hold-wheel"><div id="wheel-inner"></div></div>
 </main>
 
 <div id="success">
@@ -172,17 +211,7 @@
 
 <script>
 const HOLD_DURATION = 3000;
-
-const colors = [
-    "#ff6b6b",
-    "#ffb347",
-    "#ffd93d",
-    "#6bcB77",
-    "#4d96ff",
-    "#b983ff",
-    "#ff85a1",
-    "#45c4b0"
-];
+const MAX_DOTS_PER_ROW = 5;
 
 const leftCircles = document.getElementById("left-circles");
 const rightCircles = document.getElementById("right-circles");
@@ -192,19 +221,29 @@ const wheel = document.getElementById("wheel-inner");
 
 let leftCount = 0;
 let rightCount = 0;
+let maxDots = 5;
 let maxDifference = 2;
 
 let activePointers = new Set();
 let holdTimer = null;
 let progressTimer = null;
 let roundLocked = false;
+let roundNumber = 0;
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function setLevel(difference, button) {
-    maxDifference = difference;
+function setLevel(level, button) {
+    const settings = {
+        1: { maxDots: 5, maxDifference: 2 },
+        2: { maxDots: 8, maxDifference: 4 },
+        3: { maxDots: 10, maxDifference: 8 }
+    };
+
+    const selected = settings[level] || settings[1];
+    maxDots = selected.maxDots;
+    maxDifference = selected.maxDifference;
 
     document.querySelectorAll(".level-btn").forEach(btn => {
         btn.classList.remove("active");
@@ -215,228 +254,221 @@ function setLevel(difference, button) {
 }
 
 function newRound() {
+    roundNumber++;
     clearHold();
     activePointers.clear();
     roundLocked = false;
-
     success.classList.remove("show");
 
     leftCircles.innerHTML = "";
     rightCircles.innerHTML = "";
 
-    // Create two different amounts of circles.
-    const larger = randomInt(4, 10);
-    const difference = randomInt(1, maxDifference);
-    const smaller = larger - difference;
+    // Build every valid pair so both sides stay within this level's range.
+    const validPairs = [];
 
-    if (Math.random() < 0.5) {
-        leftCount = larger;
-        rightCount = smaller;
-    } else {
-        leftCount = smaller;
-        rightCount = larger;
+    for (let smaller = 1; smaller <= maxDots; smaller++) {
+        for (let larger = smaller + 1; larger <= maxDots; larger++) {
+            const difference = larger - smaller;
+            if (difference <= maxDifference) {
+                validPairs.push({ smaller, larger });
+            }
+        }
     }
 
-    drawCircles(leftCircles, leftCount);
-    drawCircles(rightCircles, rightCount);
+    const pair = validPairs[randomInt(0, validPairs.length - 1)];
+
+    if (Math.random() < 0.5) {
+        leftCount = pair.larger;
+        rightCount = pair.smaller;
+    } else {
+        leftCount = pair.smaller;
+        rightCount = pair.larger;
+    }
+
+    drawCircles(leftCircles, leftCount, "#4d96ff");
+    drawCircles(rightCircles, rightCount, "#b983ff");
 
     counter.textContent = "How many fingers do you need?";
     updateWheel(0);
 }
 
-function drawCircles(container, count) {
-    container.innerHTML = "";
+function drawCircles(container, count, color) {
+    container.replaceChildren();
 
-    const color = container === leftCircles ? "#4d96ff" : "#b983ff";
+    for (let start = 0; start < count; start += MAX_DOTS_PER_ROW) {
+        const row = document.createElement("div");
+        row.className = "circle-row";
 
-    for (let i = 0; i < count; i++) {
-        const circle = document.createElement("div");
+        const dotsInThisRow = Math.min(
+            MAX_DOTS_PER_ROW,
+            count - start
+        );
 
-        circle.className = "circle";
-        circle.style.width = "45px";
-        circle.style.height = "45px";
-        circle.style.backgroundColor = color;
+        for (let i = 0; i < dotsInThisRow; i++) {
+            const circle = document.createElement("div");
+            circle.className = "circle";
+            circle.style.backgroundColor = color;
+            row.appendChild(circle);
+        }
 
-        container.appendChild(circle);
+        container.appendChild(row);
     }
 }
 
 function updateWheel(progress) {
-    // Circular progress animation using the existing hold-wheel.
-    const degrees = progress * 360;
-
+    const degrees = Math.max(0, Math.min(1, progress)) * 360;
     wheel.style.background =
         `conic-gradient(#7655c9 ${degrees}deg, #e8e2f5 ${degrees}deg)`;
-
-    wheel.style.borderRadius = "50%";
 }
 
 function clearHold() {
-    clearTimeout(holdTimer);
-    clearInterval(progressTimer);
+    if (holdTimer !== null) clearTimeout(holdTimer);
+    if (progressTimer !== null) clearInterval(progressTimer);
 
     holdTimer = null;
     progressTimer = null;
-
     updateWheel(0);
 }
 
 function startHold() {
     clearHold();
 
-    const fingerNumber = activePointers.size;
-    if (fingerNumber === 0) return;
+    const fingersAtStart = activePointers.size;
+    if (fingersAtStart === 0 || roundLocked) return;
 
-    const startTime = Date.now();
+    const startedAt = performance.now();
 
-    counter.textContent =
-        "Holding " + fingerNumber +
-        (fingerNumber === 1 ? " finger..." : " fingers...");
+    counter.textContent = `Holding ${fingersAtStart} ${
+        fingersAtStart === 1 ? "finger" : "fingers"
+    }...`;
 
     progressTimer = setInterval(() => {
-        const progress = Math.min(
-            (Date.now() - startTime) / HOLD_DURATION,
-            1
-        );
-
-        updateWheel(progress);
-    }, 30);
-
-    holdTimer = setTimeout(() => {
-        clearInterval(progressTimer);
-        progressTimer = null;
-        holdTimer = null;
-
-        if (activePointers.size !== fingerNumber) {
+        // If the number of held fingers changed, don't keep progressing.
+        if (activePointers.size !== fingersAtStart) {
             clearHold();
             return;
         }
 
-        updateWheel(1);
-        checkAnswer(fingerNumber);
+        const progress = Math.min(
+            (performance.now() - startedAt) / HOLD_DURATION,
+            1
+        );
+        updateWheel(progress);
+    }, 30);
 
+    holdTimer = setTimeout(() => {
+        if (activePointers.size !== fingersAtStart || roundLocked) {
+            clearHold();
+            return;
+        }
+
+        clearInterval(progressTimer);
+        progressTimer = null;
+        holdTimer = null;
+        updateWheel(1);
+        checkAnswer(fingersAtStart);
     }, HOLD_DURATION);
 }
 
 function checkAnswer(fingers) {
-    const difference = Math.abs(leftCount - rightCount);
+    const needed = Math.abs(leftCount - rightCount);
 
-    if (fingers !== difference) {
-        counter.textContent = "Try again!";
+    if (fingers !== needed) {
+        // Keep the round available for another attempt.
+        roundLocked = true;
+        counter.textContent = "Not quite! Try again.";
         activePointers.clear();
-        clearHold();
+
+        setTimeout(() => {
+            if (roundLocked) {
+                roundLocked = false;
+                counter.textContent = "How many fingers do you need?";
+                updateWheel(0);
+            }
+        }, 900);
+
         return;
     }
 
     roundLocked = true;
 
-    const largerSide =
-        leftCount > rightCount ? leftCircles : rightCircles;
+    const largerSide = leftCount > rightCount ? leftCircles : rightCircles;
+    const circlesToRemove = Array.from(
+        largerSide.querySelectorAll(".circle")
+    ).slice(-fingers);
 
-    const circles = Array.from(largerSide.children);
-
-    circles.slice(-fingers).forEach((circle, index) => {
+    circlesToRemove.forEach((circle, index) => {
         setTimeout(() => {
             circle.classList.add("removing");
-
-            setTimeout(() => circle.remove(), 300);
-        }, index * 120);
+            setTimeout(() => {
+                const row = circle.parentElement;
+                circle.remove();
+                if (row && row.classList.contains("circle-row") && !row.children.length) {
+                    row.remove();
+                }
+            }, 320);
+        }, index * 110);
     });
 
     counter.textContent = "Perfect! Both sides are equal!";
-
     activePointers.clear();
 
     setTimeout(() => {
         success.classList.add("show");
         createConfetti();
 
-        setTimeout(newRound, 3000);
-    }, 500);
+        setTimeout(() => {
+            if (roundLocked) newRound();
+        }, 3000);
+    }, 450);
 }
 
 function createConfetti() {
-    const confettiColors = [
-        "#ff6b6b",
-        "#ffd93d",
-        "#6bcB77",
-        "#4d96ff",
-        "#b983ff",
-        "#ff85a1"
+    const colors = [
+        "#ff6b6b", "#ffd93d", "#6bcB77",
+        "#4d96ff", "#b983ff", "#ff85a1"
     ];
 
     for (let i = 0; i < 90; i++) {
         const piece = document.createElement("div");
-
         piece.className = "confetti";
-        piece.style.position = "fixed";
-        piece.style.top = "-15px";
         piece.style.left = Math.random() * 100 + "vw";
-        piece.style.width = "12px";
-        piece.style.height = "18px";
-        piece.style.backgroundColor =
-            confettiColors[randomInt(0, confettiColors.length - 1)];
-        piece.style.zIndex = "20";
-        piece.style.pointerEvents = "none";
-        piece.style.animation = "confetti-fall 2.8s linear forwards";
+        piece.style.backgroundColor = colors[randomInt(0, colors.length - 1)];
         piece.style.animationDelay = Math.random() * 0.8 + "s";
-
         document.body.appendChild(piece);
-
         setTimeout(() => piece.remove(), 4000);
     }
 }
 
-// Track fingers anywhere inside the game area.
-// Track fingers anywhere on the screen.
+/*
+ * Listen on document so touches can begin anywhere on the page.
+ * Every new finger restarts the hold timer using the new total.
+ * Lifting any finger cancels the attempt.
+ */
 document.addEventListener("pointerdown", event => {
     if (roundLocked) return;
-
-    // Don't count clicks on navigation or buttons.
+    if (event.pointerType === "mouse" && event.button !== 0) return;
     if (event.target.closest("button, a")) return;
 
     event.preventDefault();
 
     activePointers.add(event.pointerId);
-
-    // Restart the timer using the new finger count.
     startHold();
-
 }, { passive: false });
 
-function releasePointer(event) {
+function cancelAttempt(event) {
     if (!activePointers.has(event.pointerId)) return;
 
-    activePointers.clear();
-
-    if (!roundLocked) {
-        clearHold();
-        counter.textContent = "Try holding your fingers again!";
-    }
-}
-
-document.addEventListener("pointerup", releasePointer);
-document.addEventListener("pointercancel", releasePointer);
-
-window.addEventListener("blur", () => {
     activePointers.clear();
     clearHold();
-});
-
-function releasePointer(event) {
-    if (!activePointers.has(event.pointerId)) return;
-
-    activePointers.delete(event.pointerId);
 
     if (!roundLocked) {
-        clearHold();
-        activePointers.clear();
         counter.textContent = "Try holding your fingers again!";
     }
 }
 
-document.addEventListener("pointerup", releasePointer);
-document.addEventListener("pointercancel", releasePointer);
+document.addEventListener("pointerup", cancelAttempt);
+document.addEventListener("pointercancel", cancelAttempt);
 
 window.addEventListener("blur", () => {
     activePointers.clear();
@@ -445,51 +477,6 @@ window.addEventListener("blur", () => {
 
 newRound();
 </script>
-
-<style>
-@keyframes confetti-fall {
-    to {
-        transform: translateY(110vh) rotate(720deg);
-        opacity: 0;
-    }
-}
-
-body {
-    touch-action: none;
-}
-
-#game {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-#match-board {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-}
-
-.circle-row {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-}
-
-.circle {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    flex: 0 0 45px;
-    position: relative;
-    transition: transform 0.3s, opacity 0.3s;
-}
-
-</style>
 
 </body>
 </html>
