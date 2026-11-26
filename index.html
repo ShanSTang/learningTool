@@ -212,6 +212,7 @@ button:active {
 </div>
 
 <script>
+
 const game = document.getElementById("game");
 const counter = document.getElementById("counter");
 const success = document.getElementById("success");
@@ -230,6 +231,10 @@ const colors = [
 let targetCount = 0;
 let activePointers = new Set();
 let completed = false;
+let holdTimer = null;
+let holdStart = null;
+
+const HOLD_DURATION = 3000;
 
 // Generate a new round
 function newRound() {
@@ -237,9 +242,12 @@ function newRound() {
 
     activePointers.clear();
     completed = false;
+    cancelHold();
 
     success.classList.remove("show");
     game.querySelectorAll(".circle").forEach(c => c.remove());
+
+    counter.textContent = "";
 
     createCircles();
 }
@@ -260,7 +268,6 @@ function createCircles() {
         let attempts = 0;
         let valid = false;
 
-        // Try to avoid overlapping circles
         do {
             x = Math.random() * (bounds.width - diameter);
             y = Math.random() * (bounds.height - diameter - 65);
@@ -268,6 +275,7 @@ function createCircles() {
             valid = positions.every(pos => {
                 const dx = x - pos.x;
                 const dy = y - pos.y;
+
                 return Math.sqrt(dx * dx + dy * dy) >
                     diameter * 1.25;
             });
@@ -311,12 +319,53 @@ function removeFinger(event) {
 game.addEventListener("pointerup", removeFinger);
 game.addEventListener("pointercancel", removeFinger);
 
-// Update the live count
+// Cancel the hold timer
+function cancelHold() {
+    clearInterval(holdTimer);
+    holdTimer = null;
+    holdStart = null;
+}
+
+// Check finger count and start/reset hold
 function updateFingerCount() {
     const count = activePointers.size;
-    if (count === targetCount) {
-        celebrate();
+
+    // Exact number of fingers required
+    if (count !== targetCount) {
+        cancelHold();
+        counter.textContent = "";
+        return;
     }
+
+    // Already holding: don't restart timer
+    if (holdTimer !== null) return;
+
+    // Start 3-second hold
+    holdStart = Date.now();
+
+    counter.textContent = "Hold... 3";
+
+    holdTimer = setInterval(() => {
+        const elapsed = Date.now() - holdStart;
+        const remaining = Math.max(
+            0,
+            Math.ceil((HOLD_DURATION - elapsed) / 1000)
+        );
+
+        // Make sure finger count is still exact
+        if (activePointers.size !== targetCount) {
+            cancelHold();
+            updateFingerCount();
+            return;
+        }
+
+        counter.textContent = "Hold... " + remaining;
+
+        if (elapsed >= HOLD_DURATION) {
+            cancelHold();
+            celebrate();
+        }
+    }, 50);
 }
 
 // Celebration!
