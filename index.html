@@ -247,7 +247,7 @@ function newRound() {
     success.classList.remove("show");
     game.querySelectorAll(".circle").forEach(c => c.remove());
 
-    counter.textContent = "";
+    counter.textContent = "How many circles are there?";
 
     createCircles();
 }
@@ -333,7 +333,7 @@ function updateFingerCount() {
     // Exact number of fingers required
     if (count !== targetCount) {
         cancelHold();
-        counter.textContent = "";
+        counter.textContent = "How many circles are there?";
         return;
     }
 
