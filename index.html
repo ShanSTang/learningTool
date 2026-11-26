@@ -318,8 +318,7 @@ game.addEventListener("pointercancel", removeFinger);
 function updateFingerCount() {
     const count = activePointers.size;
 
-    counter.textContent =
-        count + " / " + targetCount + " fingers";
+    counter.textContent = "";
 
     if (count === targetCount) {
         celebrate();
