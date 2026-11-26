@@ -241,8 +241,7 @@ function newRound() {
     success.classList.remove("show");
     game.querySelectorAll(".circle").forEach(c => c.remove());
 
-    counter.textContent = "Find " + targetCount +
-        (targetCount === 1 ? " finger!" : " fingers!");
+    counter.textContent = ""
 
     createCircles();
 }
