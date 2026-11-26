@@ -1,542 +1,495 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subtraction | Go Low!</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-    <style>
-        body {
-            background: #f5f2ff;
-        }
+<title>Subtraction</title>
 
-        .subtraction-game {
-            max-width: 950px;
-            margin: 20px auto;
-            padding: 15px;
-            text-align: center;
-        }
+<link href="style.css" rel="stylesheet"/>
 
-        .game-instructions {
-            font-size: 1.2rem;
-            margin: 15px 0 25px;
-        }
+<style>
+/* Two sides of the subtraction game */
+#game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    position: relative;
+    touch-action: none;
+}
 
-        .game-scene {
-            height: 500px;
-            background: #dff3ff;
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-            border-bottom: 12px solid #8bba78;
-            touch-action: none;
-            user-select: none;
-        }
+#match-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 1100px;
+    min-height: 180px;
+}
 
-        .overpass {
-            position: absolute;
-            left: 65%;
-            bottom: 0;
-            width: 220px;
-            height: 100%;
-            transform: translateX(-50%);
-            z-index: 2;
-            pointer-events: none;
-        }
+.side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    min-width: 0;
+}
 
-        .bridge-beam {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: #8b6545;
-            border: 3px solid #62452e;
-            border-radius: 4px;
-        }
+.side + .side {
+    border-left: 4px solid #7655c9;
+}
 
-        .bridge-support {
-            background: #c9a77d;
-        }
+.side-label {
+    font-size: 20px;
+    font-weight: bold;
+    color: #7655c9;
+    margin-bottom: 18px;
+}
 
-        .bridge-background {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #d2b48c;
-        }
+.circle-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 65px;
+    width: 100%;
+}
 
-        .car {
-            position: absolute;
-            left: 8%;
-            bottom: 0;
-            width: 190px;
-            height: 100%;
-            z-index: 3;
-            transition: left 1.4s ease-in-out;
-            pointer-events: none;
-        }
+.circle {
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: transform 0.3s, opacity 0.3s;
+}
 
-        .car.moving {
-            left: 75%;
-        }
+.circle.removing {
+    transform: scale(0);
+    opacity: 0;
+}
 
-        .car-body {
-            position: absolute;
-            bottom: 0;
-            width: 190px;
-            height: 38px;
-            background: #e85d5d;
-            border: 3px solid #a83232;
-            border-radius: 12px 25px 8px 8px;
-        }
+#counter {
+    text-align: center;
+    min-height: 30px;
+    font-size: 22px;
+}
 
-        .car-wheel {
-            position: absolute;
-            bottom: -8px;
-            width: 28px;
-            height: 28px;
-            background: #333;
-            border: 4px solid #777;
-            border-radius: 50%;
-            z-index: 2;
-        }
+#hold-wheel {
+    position: relative;
+}
 
-        .car-wheel.left {
-            left: 25px;
-        }
+#wheel-inner {
+    transform-origin: center;
+}
 
-        .car-wheel.right {
-            right: 25px;
-        }
+@media (max-width: 600px) {
+    #game {
+        gap: 16px;
+        padding: 12px;
+    }
 
-        .car-blocks {
-            position: absolute;
-            bottom: 38px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-        }
+    #match-board {
+        min-height: 150px;
+    }
 
-        .block {
-            width: 35px;
-            height: 35px;
-            background: #f4b942;
-            border: 2px solid #bd8521;
-            border-radius: 5px;
-            margin-top: -1px;
-        }
+    .side {
+        padding: 8px 5px;
+    }
 
-        .game-counter {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin: 15px;
-        }
+    .side-label {
+        font-size: 17px;
+        margin-bottom: 12px;
+    }
 
-        .finger-instructions {
-            font-size: 1.15rem;
-            font-weight: bold;
-            margin: 18px 0 8px;
-        }
-
-        .hold-progress {
-            width: 90%;
-            max-width: 350px;
-            height: 16px;
-            background: #e2dcf1;
-            border-radius: 20px;
-            margin: 12px auto 20px;
-            overflow: hidden;
-        }
-
-        .hold-progress-fill {
-            width: 0%;
-            height: 100%;
-            background: #7655c9;
-            border-radius: 20px;
-            transition: width 0.02s linear;
-        }
-
-        .game-button {
-            background: #7655c9;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px 25px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-        }
-
-        .game-button:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
-
-        .game-message {
-            font-size: 1.7rem;
-            font-weight: bold;
-            min-height: 40px;
-            margin: 15px;
-            color: #513b91;
-        }
-
-        .game-message.error {
-            color: #d44747;
-        }
-
-        .game-message.success {
-            color: #27945c;
-        }
-
-        .page-nav {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding: 12px;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            background: #eee9ff;
-            color: #513b91;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: bold;
-        }
-
-        .nav-link.active {
-            background: #7655c9;
-            color: white;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 600px) {
-            .subtraction-game {
-                padding: 8px;
-            }
-
-            .game-scene {
-                height: 500px;
-            }
-
-            .overpass {
-                left: 72%;
-                width: 170px;
-            }
-
-            .car {
-                left: 2%;
-                transform: scale(0.85);
-                transform-origin: bottom left;
-            }
-
-            .car.moving {
-                left: 65%;
-            }
-        }
-    </style>
+    .circle-row {
+        gap: 6px;
+    }
+}
+</style>
 </head>
 
 <body>
 
 <header>
-    <h1>How Low Can You Go?</h1>
-    <button class="game-button" id="new-game-button"> New Round ↻ </button>
+    <div>
+        <h1>Subtraction</h1>
+        <div id="instructions">
+            Hold down the number of fingers needed to make both sides equal!
+        </div>
+    </div>
+
+    <div class="level-selector">
+        <button class="level-btn active" onclick="setLevel(2, this)">
+            LvL 1
+        </button>
+        <button class="level-btn" onclick="setLevel(4, this)">
+            LvL 2
+        </button>
+        <button class="level-btn" onclick="setLevel(8, this)">
+            LvL 3
+        </button>
+    </div>
+
+    <button onclick="newRound()">New Round ↻</button>
 </header>
 
 <nav class="page-nav">
-    <a href="index.html" class="nav-link">Finger Match</a>
+    <a href="index.html" class="nav-link">Pop!</a>
     <a href="subtraction.html" class="nav-link active">Subtraction</a>
     <a href="multiplication.html" class="nav-link">Multiplication</a>
     <a href="division.html" class="nav-link">Division</a>
 </nav>
 
-<main class="subtraction-game">
+<main id="game">
 
-    <p class="game-instructions" id="instructions">
-        Hold your fingers on the scene to take blocks off the car!
-    </p>
-
-    <div class="game-scene" id="game-scene">
-
-        <div class="overpass">
-            <div class="bridge-background"></div>
-            <div class="bridge-beam" id="bridge-beam"></div>
-            <div class="bridge-support left"></div>
-            <div class="bridge-support right"></div>
+    <div id="match-board">
+        <div class="side">
+            <div class="side-label">Left</div>
+            <div class="circle-row" id="left-circles"></div>
         </div>
 
-        <div class="car" id="car">
-            <div class="car-blocks" id="car-blocks"></div>
-            <div class="car-body"></div>
-            <div class="car-wheel left"></div>
-            <div class="car-wheel right"></div>
+        <div class="side">
+            <div class="side-label">Right</div>
+            <div class="circle-row" id="right-circles"></div>
         </div>
-
     </div>
 
-    <div class="hold-progress">
-        <div class="hold-progress-fill" id="hold-progress-fill"></div>
+    <div id="counter">Get ready!</div>
+
+    <div id="hold-wheel">
+        <div id="wheel-inner"></div>
     </div>
 
-    <div class="game-counter" id="car-count"></div>
-
-    <div class="game-message" id="message"></div>
 </main>
 
+<div id="success">
+    <h2>AMAZING! 🎉</h2>
+    <p>You made both sides equal!</p>
+</div>
+
 <script>
-    const HOLD_DURATION = 1000;
+const HOLD_DURATION = 3000;
 
-    let startingBlocks = 0;
-    let bridgeHeight = 0;
-    let removedBlocks = 0;
-    let stage = "removing";
+const colors = [
+    "#ff6b6b",
+    "#ffb347",
+    "#ffd93d",
+    "#6bcB77",
+    "#4d96ff",
+    "#b983ff",
+    "#ff85a1",
+    "#45c4b0"
+];
 
-    let activePointers = new Set();
-    let holdTimer = null;
-    let progressTimer = null;
-    let holdStartTime = 0;
-    let holdComplete = false;
-    let retryTimer = null;
+const leftCircles = document.getElementById("left-circles");
+const rightCircles = document.getElementById("right-circles");
+const counter = document.getElementById("counter");
+const success = document.getElementById("success");
+const wheel = document.getElementById("wheel-inner");
 
-    const gameScene = document.getElementById("game-scene");
-    const car = document.getElementById("car");
-    const carBlocks = document.getElementById("car-blocks");
-    const carCount = document.getElementById("car-count");
-    const message = document.getElementById("message");
-    const progressFill = document.getElementById("hold-progress-fill");
+let leftCount = 0;
+let rightCount = 0;
+let maxDifference = 2;
 
-    function newProblem() {
-        clearTimeout(retryTimer);
+let activePointers = new Set();
+let holdTimer = null;
+let progressTimer = null;
+let roundLocked = false;
 
-        bridgeHeight = Math.floor(Math.random() * 3) + 1;
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-        // Starting stack is always taller than the bridge.
-        startingBlocks =
-            Math.floor(Math.random() * (8 - bridgeHeight)) +
-            bridgeHeight + 1;
+function setLevel(difference, button) {
+    maxDifference = difference;
 
-        resetRound();
+    document.querySelectorAll(".level-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    newRound();
+}
+
+function newRound() {
+    clearHold();
+    activePointers.clear();
+    roundLocked = false;
+
+    success.classList.remove("show");
+
+    leftCircles.innerHTML = "";
+    rightCircles.innerHTML = "";
+
+    // Create two different amounts of circles.
+    const larger = randomInt(4, 10);
+    const difference = randomInt(1, maxDifference);
+    const smaller = larger - difference;
+
+    if (Math.random() < 0.5) {
+        leftCount = larger;
+        rightCount = smaller;
+    } else {
+        leftCount = smaller;
+        rightCount = larger;
     }
 
-    function resetRound() {
-        cancelHold();
+    drawCircles(leftCircles, leftCount);
+    drawCircles(rightCircles, rightCount);
 
-        removedBlocks = 0;
-        stage = "removing";
+    counter.textContent = "How many fingers do you need?";
+    updateWheel(0);
+}
 
-        car.classList.remove("moving");
+function drawCircles(container, count) {
+    container.innerHTML = "";
 
-        message.textContent = "";
-        message.className = "game-message";
+    const color = container === leftCircles ? "#4d96ff" : "#b983ff";
 
-        document.getElementById("instructions").textContent =
-            "Hold your fingers on the scene to take blocks off the car!";
+    for (let i = 0; i < count; i++) {
+        const circle = document.createElement("div");
 
-        const beamPosition = 38 + bridgeHeight * 35;
+        circle.className = "circle";
+        circle.style.width = "45px";
+        circle.style.height = "45px";
+        circle.style.backgroundColor = color;
 
-        document.getElementById("bridge-beam").style.bottom =
-            beamPosition + "px";
-
-        drawCarBlocks();
-        updateCounts();
+        container.appendChild(circle);
     }
+}
 
-    function drawCarBlocks() {
-        carBlocks.innerHTML = "";
+function updateWheel(progress) {
+    // Circular progress animation using the existing hold-wheel.
+    const degrees = progress * 360;
 
-        const remaining = startingBlocks - removedBlocks;
+    wheel.style.background =
+        `conic-gradient(#7655c9 ${degrees}deg, #e8e2f5 ${degrees}deg)`;
 
-        for (let i = 0; i < remaining; i++) {
-            const block = document.createElement("div");
-            block.className = "block";
-            carBlocks.appendChild(block);
-        }
-    }
+    wheel.style.borderRadius = "50%";
+}
 
-    function updateCounts() {
-        const remaining = startingBlocks - removedBlocks;
+function clearHold() {
+    clearTimeout(holdTimer);
+    clearInterval(progressTimer);
 
-        carCount.textContent =
-            "Blocks on car: " + remaining +
-            " | Blocks removed: " + removedBlocks;
-    }
+    holdTimer = null;
+    progressTimer = null;
 
-    function cancelHold() {
-        clearTimeout(holdTimer);
+    updateWheel(0);
+}
+
+function startHold() {
+    clearHold();
+
+    const fingerNumber = activePointers.size;
+    if (fingerNumber === 0) return;
+
+    const startTime = Date.now();
+
+    counter.textContent =
+        "Holding " + fingerNumber +
+        (fingerNumber === 1 ? " finger..." : " fingers...");
+
+    progressTimer = setInterval(() => {
+        const progress = Math.min(
+            (Date.now() - startTime) / HOLD_DURATION,
+            1
+        );
+
+        updateWheel(progress);
+    }, 30);
+
+    holdTimer = setTimeout(() => {
         clearInterval(progressTimer);
-
-        holdTimer = null;
         progressTimer = null;
-        holdStartTime = 0;
-        holdComplete = false;
+        holdTimer = null;
 
-        progressFill.style.width = "0%";
-    }
-
-    function startHold() {
-        if (stage !== "removing") return;
-        if (activePointers.size === 0) return;
-
-        const fingerNumber = activePointers.size;
-        const remaining = startingBlocks - removedBlocks;
-
-        if (fingerNumber > remaining) {
-            cancelHold();
-            message.textContent = "Not enough blocks for that many fingers!";
-            message.className = "game-message error";
+        if (activePointers.size !== fingerNumber) {
+            clearHold();
             return;
         }
 
-        message.textContent = "";
-        message.className = "game-message";
+        updateWheel(1);
+        checkAnswer(fingerNumber);
 
-        holdStartTime = Date.now();
+    }, HOLD_DURATION);
+}
 
-        holdTimer = setTimeout(() => {
-            if (activePointers.size !== fingerNumber) return;
+function checkAnswer(fingers) {
+    const difference = Math.abs(leftCount - rightCount);
 
-            // Remove one block for each finger held.
-            removedBlocks += fingerNumber;
-
-            holdComplete = true;
-            activePointers.clear();
-
-            clearInterval(progressTimer);
-            progressTimer = null;
-            holdTimer = null;
-
-            progressFill.style.width = "100%";
-
-            drawCarBlocks();
-            updateCounts();
-
-            message.textContent =
-                "You took away " + fingerNumber +
-                (fingerNumber === 1 ? " block!" : " blocks!");
-
-            message.className = "game-message success";
-
-            // Automatically test the car after a brief pause.
-            setTimeout(() => {
-                if (stage === "removing") {
-                    driveCar();
-                }
-            }, 700);
-
-        }, HOLD_DURATION);
-
-        progressTimer = setInterval(() => {
-            const elapsed = Date.now() - holdStartTime;
-            const progress = Math.min(
-                elapsed / HOLD_DURATION * 100,
-                100
-            );
-
-            progressFill.style.width = progress + "%";
-        }, 20);
+    if (fingers !== difference) {
+        counter.textContent = "Try again!";
+        activePointers.clear();
+        clearHold();
+        return;
     }
 
-    // Track fingers anywhere on the screen.
-document.addEventListener("pointerdown", (event) => {
-    if (stage !== "removing") return;
-    if (holdComplete) return;
+    roundLocked = true;
+
+    const largerSide =
+        leftCount > rightCount ? leftCircles : rightCircles;
+
+    const circles = Array.from(largerSide.children);
+
+    circles.slice(-fingers).forEach((circle, index) => {
+        setTimeout(() => {
+            circle.classList.add("removing");
+
+            setTimeout(() => circle.remove(), 300);
+        }, index * 120);
+    });
+
+    counter.textContent = "Perfect! Both sides are equal!";
+
+    activePointers.clear();
+
+    setTimeout(() => {
+        success.classList.add("show");
+        createConfetti();
+
+        setTimeout(newRound, 3000);
+    }, 500);
+}
+
+function createConfetti() {
+    const confettiColors = [
+        "#ff6b6b",
+        "#ffd93d",
+        "#6bcB77",
+        "#4d96ff",
+        "#b983ff",
+        "#ff85a1"
+    ];
+
+    for (let i = 0; i < 90; i++) {
+        const piece = document.createElement("div");
+
+        piece.className = "confetti";
+        piece.style.position = "fixed";
+        piece.style.top = "-15px";
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.width = "12px";
+        piece.style.height = "18px";
+        piece.style.backgroundColor =
+            confettiColors[randomInt(0, confettiColors.length - 1)];
+        piece.style.zIndex = "20";
+        piece.style.pointerEvents = "none";
+        piece.style.animation = "confetti-fall 2.8s linear forwards";
+        piece.style.animationDelay = Math.random() * 0.8 + "s";
+
+        document.body.appendChild(piece);
+
+        setTimeout(() => piece.remove(), 4000);
+    }
+}
+
+// Track fingers anywhere inside the game area.
+// Track fingers anywhere on the screen.
+document.addEventListener("pointerdown", event => {
+    if (roundLocked) return;
+
+    // Don't count clicks on navigation or buttons.
+    if (event.target.closest("button, a")) return;
 
     event.preventDefault();
 
-    cancelHold();
-
     activePointers.add(event.pointerId);
 
+    // Restart the timer using the new finger count.
     startHold();
+
 }, { passive: false });
+
+function releasePointer(event) {
+    if (!activePointers.has(event.pointerId)) return;
+
+    activePointers.clear();
+
+    if (!roundLocked) {
+        clearHold();
+        counter.textContent = "Try holding your fingers again!";
+    }
+}
 
 document.addEventListener("pointerup", releasePointer);
 document.addEventListener("pointercancel", releasePointer);
 
 window.addEventListener("blur", () => {
-    if (!holdComplete) {
-        activePointers.clear();
-        cancelHold();
-    }
+    activePointers.clear();
+    clearHold();
 });
 
-    function releasePointer(event) {
-        if (!activePointers.has(event.pointerId)) return;
+function releasePointer(event) {
+    if (!activePointers.has(event.pointerId)) return;
 
-        activePointers.delete(event.pointerId);
+    activePointers.delete(event.pointerId);
 
-        if (!holdComplete) {
-            cancelHold();
-
-            if (activePointers.size > 0 && stage === "removing") {
-                startHold();
-            }
-        } else {
-            if (activePointers.size === 0) {
-                holdComplete = false;
-            }
-        }
-    }
-
-    gameScene.addEventListener("pointerup", releasePointer);
-    gameScene.addEventListener("pointercancel", releasePointer);
-
-    window.addEventListener("blur", () => {
-        if (!holdComplete) {
-            activePointers.clear();
-            cancelHold();
-        }
-    });
-
-    function driveCar() {
-    if (stage !== "removing") return;
-
-    cancelHold();
-    activePointers.clear();
-
-    stage = "driving";
-
-    const remaining = startingBlocks - removedBlocks;
-
-    car.classList.add("moving");
-
-    if (remaining > bridgeHeight) {
-        // Car is too tall.
-        setTimeout(() => {
-            message.textContent = "TOO TALL!";
-            message.className = "game-message error";
-
-            retryTimer = setTimeout(resetRound, 1800);
-        }, 1000);
-
-    } else {
-        // Car fits under the bridge.
-        setTimeout(() => {
-            message.textContent = "You made it through! Great job!";
-            message.className = "game-message success";
-
-            stage = "complete";
-
-            retryTimer = setTimeout(newProblem, 2500);
-        }, 1500);
+    if (!roundLocked) {
+        clearHold();
+        activePointers.clear();
+        counter.textContent = "Try holding your fingers again!";
     }
 }
-    document.getElementById("new-game-button")
-        .addEventListener("click", newProblem);
 
-    newProblem();
+document.addEventListener("pointerup", releasePointer);
+document.addEventListener("pointercancel", releasePointer);
+
+window.addEventListener("blur", () => {
+    activePointers.clear();
+    clearHold();
+});
+
+newRound();
 </script>
+
+<style>
+@keyframes confetti-fall {
+    to {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+body {
+    touch-action: none;
+}
+
+#game {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#match-board {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+}
+
+.circle-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    flex: 0 0 45px;
+    position: relative;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+</style>
 
 </body>
 </html>
