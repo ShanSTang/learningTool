@@ -28,6 +28,30 @@ header {
     z-index: 10;
 }
 
+.page-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+}
+
+.nav-link {
+    text-decoration: none;
+    background: #eee9ff;
+    color: #513b91;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: #7655c9;
+    color: white;
+}
+
 h1 {
     font-size: clamp(25px, 4vw, 38px);
     margin: 0;
