@@ -19,12 +19,13 @@ let activePointers = new Set();
 let completed = false;
 let holdTimer = null;
 let holdStart = null;
+let maxCircles = 4;
 
 const HOLD_DURATION = 1000;
 
 // Generate a new round
 function newRound() {
-    targetCount = Math.floor(Math.random() * 8) + 1;
+    targetCount = Math.floor(Math.random() * maxCircles) + 1;
 
     activePointers.clear();
     completed = false;
@@ -158,6 +159,18 @@ function updateFingerCount() {
         }
 
     }, 30);
+}
+
+function setLevel(max, button) {
+    maxCircles = max;
+
+    document.querySelectorAll(".level-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    newRound();
 }
 
 // Celebration!
