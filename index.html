@@ -144,6 +144,41 @@ button:active {
     color: #817b99;
 }
 
+#hold-wheel {
+    position: absolute;
+    width: 105px;
+    height: 105px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+
+    background: conic-gradient(
+        #7465d5 0deg,
+        #7465d5 0deg,
+        #e8e5f5 0deg
+    );
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    pointer-events: none;
+
+    box-shadow: 0 4px 15px #00000015;
+}
+
+#wheel-inner {
+    width: 83px;
+    height: 83px;
+    background: #f7f5ff;
+    border-radius: 50%;
+}
+
+#hold-wheel.active {
+    display: flex;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -203,7 +238,7 @@ button:active {
 </header>
 
 <main id="game">
-    <div id="counter">Get ready!</div>
+    <div id="counter">Get ready!</div> <div id="hold-wheel"><div id="wheel-inner"></div></div>
 </main>
 
 <div id="success">
@@ -216,6 +251,7 @@ button:active {
 const game = document.getElementById("game");
 const counter = document.getElementById("counter");
 const success = document.getElementById("success");
+const holdWheel = document.getElementById("hold-wheel");
 
 const colors = [
     "#FF7777",
@@ -324,48 +360,54 @@ function cancelHold() {
     clearInterval(holdTimer);
     holdTimer = null;
     holdStart = null;
+
+    holdWheel.classList.remove("active");
+
+    holdWheel.style.background =
+        "conic-gradient(#7465d5 0deg, #e8e5f5 0deg)";
 }
 
 // Check finger count and start/reset hold
 function updateFingerCount() {
     const count = activePointers.size;
 
-    // Exact number of fingers required
     if (count !== targetCount) {
         cancelHold();
-        counter.textContent = "How many circles are there?";
+        counter.textContent = "";
         return;
     }
 
-    // Already holding: don't restart timer
     if (holdTimer !== null) return;
 
-    // Start 3-second hold
     holdStart = Date.now();
 
-    counter.textContent = "Hold... 3";
+    holdWheel.classList.add("active");
 
     holdTimer = setInterval(() => {
         const elapsed = Date.now() - holdStart;
-        const remaining = Math.max(
-            0,
-            Math.ceil((HOLD_DURATION - elapsed) / 1000)
-        );
 
-        // Make sure finger count is still exact
+        const progress = Math.min(elapsed / HOLD_DURATION, 1);
+        const degrees = progress * 360;
+
+        // Update circular progress wheel
+        holdWheel.style.background =
+            `conic-gradient(
+                #7465d5 ${degrees}deg,
+                #e8e5f5 ${degrees}deg
+            )`;
+
         if (activePointers.size !== targetCount) {
             cancelHold();
             updateFingerCount();
             return;
         }
 
-        counter.textContent = "Hold... " + remaining;
-
         if (elapsed >= HOLD_DURATION) {
             cancelHold();
             celebrate();
         }
-    }, 50);
+
+    }, 30);
 }
 
 // Celebration!
