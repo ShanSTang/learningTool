@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,23 +6,692 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subtraction | Finger Match!</title>
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            background: #f5f2ff;
+        }
+
+        .subtraction-game {
+            max-width: 950px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .game-instructions {
+            font-size: 1.2rem;
+            margin: 15px 0 25px;
+        }
+
+        .game-scene {
+            background: #dff3ff;
+            border-radius: 20px;
+            padding: 25px 15px;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bridge-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0;
+            margin-bottom: 10px;
+            min-height: 90px;
+        }
+
+        .bridge-pillar {
+            width: 35px;
+            height: 35px;
+            background: #8b6545;
+            border: 2px solid #62452e;
+        }
+
+        .bridge-top {
+            width: 210px;
+            height: 35px;
+            background: #8b6545;
+            border: 2px solid #62452e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .bridge-clearance {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            width: 210px;
+            min-height: 100px;
+            border-bottom: 5px solid #777;
+            position: relative;
+        }
+
+        .clearance-label {
+            position: absolute;
+            top: 0;
+            color: #38546b;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .car {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 2px;
+            min-height: 100px;
+            margin: 15px auto 0;
+            position: relative;
+        }
+
+        .car-body {
+            position: absolute;
+            bottom: 0;
+            width: 190px;
+            height: 35px;
+            background: #e85d5d;
+            border-radius: 12px 25px 8px 8px;
+            border: 3px solid #a83232;
+        }
+
+        .car-wheel {
+            position: absolute;
+            bottom: -12px;
+            width: 27px;
+            height: 27px;
+            background: #333;
+            border: 4px solid #777;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .car-wheel.left {
+            left: 25px;
+        }
+
+        .car-wheel.right {
+            right: 25px;
+        }
+
+        .car-blocks {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            margin-bottom: 35px;
+            min-height: 0;
+        }
+
+        .block {
+            width: 35px;
+            height: 35px;
+            background: #f4b942;
+            border: 2px solid #bd8521;
+            border-radius: 5px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #694711;
+            margin-top: -1px;
+        }
+
+        .block:active {
+            cursor: grabbing;
+        }
+
+        .storage-area {
+            background: #fff;
+            border: 3px dashed #8c79c6;
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 95px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .storage-area h3 {
+            margin: 0 0 10px;
+            color: #634e9c;
+        }
+
+        .storage-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            min-height: 40px;
+        }
+
+        .storage-block {
+            width: 35px;
+            height: 35px;
+            background: #f4b942;
+            border: 2px solid #bd8521;
+            border-radius: 5px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .storage-block.selected {
+            outline: 4px solid #7655c9;
+            transform: translateY(-5px);
+        }
+
+        .new-bridge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px auto;
+        }
+
+        .bridge-slots {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            min-height: 40px;
+            margin: 10px;
+        }
+
+        .bridge-slot {
+            width: 35px;
+            height: 35px;
+            border: 2px dashed #8b6545;
+            background: #f5e6d5;
+            border-radius: 5px;
+        }
+
+        .bridge-slot.filled {
+            background: #8b6545;
+            border-style: solid;
+        }
+
+        .game-button {
+            background: #7655c9;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .game-button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .game-message {
+            font-size: 1.7rem;
+            font-weight: bold;
+            min-height: 40px;
+            margin: 15px;
+            color: #513b91;
+        }
+
+        .game-message.error {
+            color: #d44747;
+        }
+
+        .game-message.success {
+            color: #27945c;
+        }
+
+        .game-counter {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .page-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            background: #eee9ff;
+            color: #513b91;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .nav-link.active {
+            background: #7655c9;
+            color: white;
+        }
+
+        .drag-ghost {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.85;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            .subtraction-game {
+                padding: 8px;
+            }
+
+            .game-scene {
+                padding: 15px 5px;
+            }
+
+            .bridge-top {
+                width: 170px;
+            }
+
+            .bridge-clearance {
+                width: 170px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <header>
-        <h1>Subtraction</h1>
-        <p>Let's learn how to take things away!</p>
-    </header>
 
-    <nav class="page-nav">
-        <a href="index.html" class="nav-link">Pop!</a>
-        <a href="subtraction.html" class="nav-link active">Subtraction</a>
-        <a href="multiplication.html" class="nav-link">Multiplication</a>
-        <a href="division.html" class="nav-link">Division</a>
-    </nav>
+<header>
+    <h1>Subtraction</h1>
+    <p>Take away blocks to help the car!</p>
+</header>
 
-    <main id="game">
-        <h2>Coming Soon!</h2>
-        <p>We'll learn subtraction here.</p>
-    </main>
+<nav class="page-nav">
+    <a href="index.html" class="nav-link">Finger Match</a>
+    <a href="subtraction.html" class="nav-link active">Subtraction</a>
+    <a href="multiplication.html" class="nav-link">Multiplication</a>
+    <a href="division.html" class="nav-link">Division</a>
+</nav>
+
+<main class="subtraction-game">
+
+    <p class="game-instructions" id="instructions">
+        Drag blocks off the car until it can fit under the bridge!
+    </p>
+
+    <div class="game-scene">
+
+        <div class="bridge-area">
+            <div class="bridge-pillar"></div>
+            <div class="bridge-clearance">
+                <div class="clearance-label" id="clearance-label">
+                    Bridge height: 1
+                </div>
+            </div>
+            <div class="bridge-pillar"></div>
+        </div>
+
+        <div class="car">
+            <div class="car-blocks" id="car-blocks"></div>
+            <div class="car-body"></div>
+            <div class="car-wheel left"></div>
+            <div class="car-wheel right"></div>
+        </div>
+
+    </div>
+
+    <div class="game-counter" id="car-count"></div>
+
+    <div class="storage-area" id="storage-area">
+        <h3>Blocks taken off the car</h3>
+        <div class="storage-blocks" id="storage-blocks"></div>
+        <p id="storage-count">0 blocks</p>
+    </div>
+
+    <div class="game-message" id="message"></div>
+
+    <button class="game-button" id="drive-button" disabled>
+        Drive through!
+    </button>
+
+    <section id="building-section" class="hidden">
+
+        <h2>Build the new bridge!</h2>
+        <p>Tap your blocks to add them to the bridge.</p>
+
+        <div class="new-bridge">
+            <div class="bridge-slots" id="bridge-slots"></div>
+            <div style="font-weight:bold" id="bridge-count"></div>
+        </div>
+
+        <button class="game-button" id="build-button">
+            Build bridge!
+        </button>
+
+    </section>
+
+    <button class="game-button" id="new-game-button">
+        New Problem
+    </button>
+
+</main>
+
+<script>
+    let startingBlocks = 0;
+    let bridgeHeight = 0;
+    let removedBlocks = 0;
+    let placedBlocks = 0;
+    let stage = "removing";
+    let selectedBlock = null;
+
+    const carBlocks = document.getElementById("car-blocks");
+    const storageBlocks = document.getElementById("storage-blocks");
+    const carCount = document.getElementById("car-count");
+    const storageCount = document.getElementById("storage-count");
+    const message = document.getElementById("message");
+    const driveButton = document.getElementById("drive-button");
+    const buildingSection = document.getElementById("building-section");
+    const bridgeSlots = document.getElementById("bridge-slots");
+    const buildButton = document.getElementById("build-button");
+    const instructions = document.getElementById("instructions");
+
+    function newProblem() {
+        bridgeHeight = Math.floor(Math.random() * 3) + 1;
+
+        // Ensure the starting stack is taller than the bridge.
+        startingBlocks = Math.floor(
+            Math.random() * (8 - bridgeHeight)
+        ) + bridgeHeight + 1;
+
+        removedBlocks = 0;
+        placedBlocks = 0;
+        selectedBlock = null;
+        stage = "removing";
+
+        message.textContent = "";
+        message.className = "game-message";
+
+        buildingSection.classList.add("hidden");
+        driveButton.classList.remove("hidden");
+        driveButton.disabled = true;
+
+        instructions.textContent =
+            "Drag blocks off the car until it can fit under the bridge!";
+
+        document.getElementById("clearance-label").textContent =
+            "Bridge height: " + bridgeHeight;
+
+        drawCarBlocks();
+        drawStorage();
+        updateCounts();
+    }
+
+    function drawCarBlocks() {
+        carBlocks.innerHTML = "";
+
+        for (let i = 0; i < startingBlocks - removedBlocks; i++) {
+            const block = document.createElement("div");
+            block.className = "block";
+            block.textContent = "";
+
+            block.addEventListener("pointerdown", startDrag);
+
+            carBlocks.appendChild(block);
+        }
+    }
+
+    function drawStorage() {
+        storageBlocks.innerHTML = "";
+
+        for (let i = 0; i < removedBlocks; i++) {
+            const block = document.createElement("button");
+            block.className = "storage-block";
+            block.type = "button";
+            block.setAttribute("aria-label", "Removed block");
+
+            if (selectedBlock === i) {
+                block.classList.add("selected");
+            }
+
+            block.addEventListener("click", () => {
+                if (stage !== "building") return;
+
+                selectedBlock = i;
+                drawStorage();
+            });
+
+            storageBlocks.appendChild(block);
+        }
+
+        storageCount.textContent =
+            removedBlocks + (removedBlocks === 1 ? " block" : " blocks");
+    }
+
+    function updateCounts() {
+        const remaining = startingBlocks - removedBlocks;
+
+        carCount.textContent =
+            "Blocks on car: " + remaining +
+            " | Blocks removed: " + removedBlocks;
+
+        driveButton.disabled = remaining > bridgeHeight;
+    }
+
+    // Custom pointer dragging so this works on touchscreens and iPads.
+    let dragBlock = null;
+    let dragGhost = null;
+
+    function startDrag(event) {
+        if (stage !== "removing") return;
+
+        event.preventDefault();
+
+        dragBlock = event.currentTarget;
+
+        dragGhost = dragBlock.cloneNode(true);
+        dragGhost.classList.add("drag-ghost");
+        document.body.appendChild(dragGhost);
+
+        moveGhost(event);
+
+        document.addEventListener("pointermove", moveDrag);
+        document.addEventListener("pointerup", endDrag, { once: true });
+        document.addEventListener("pointercancel", endDrag, { once: true });
+    }
+
+    function moveGhost(event) {
+        if (!dragGhost) return;
+
+        dragGhost.style.left = (event.clientX - 17) + "px";
+        dragGhost.style.top = (event.clientY - 17) + "px";
+    }
+
+    function moveDrag(event) {
+        moveGhost(event);
+    }
+
+    function endDrag(event) {
+        document.removeEventListener("pointermove", moveDrag);
+
+        if (!dragBlock) return;
+
+        const area = document.getElementById("storage-area");
+        const bounds = area.getBoundingClientRect();
+
+        const droppedInStorage =
+            event.clientX >= bounds.left &&
+            event.clientX <= bounds.right &&
+            event.clientY >= bounds.top &&
+            event.clientY <= bounds.bottom;
+
+        if (droppedInStorage) {
+            removedBlocks++;
+            selectedBlock = null;
+
+            drawCarBlocks();
+            drawStorage();
+            updateCounts();
+            updateCarFit();
+        }
+
+        if (dragGhost) {
+            dragGhost.remove();
+        }
+
+        dragGhost = null;
+        dragBlock = null;
+    }
+
+    function updateCarFit() {
+        const remaining = startingBlocks - removedBlocks;
+
+        if (remaining <= bridgeHeight) {
+            driveButton.disabled = false;
+            message.textContent = "The car fits! You can drive through.";
+            message.className = "game-message success";
+        } else {
+            driveButton.disabled = true;
+            message.textContent = "Keep taking blocks off!";
+            message.className = "game-message";
+        }
+    }
+
+    driveButton.addEventListener("click", () => {
+        if (stage !== "removing") return;
+
+        const remaining = startingBlocks - removedBlocks;
+
+        if (remaining > bridgeHeight) {
+            message.textContent = "TOO TALL!";
+            message.className = "game-message error";
+            return;
+        }
+
+        stage = "building";
+        driveButton.classList.add("hidden");
+
+        instructions.textContent =
+            "Now use your removed blocks to build a new bridge!";
+
+        message.textContent = "The car made it through!";
+        message.className = "game-message success";
+
+        buildingSection.classList.remove("hidden");
+
+        drawBridgeSlots();
+        drawStorage();
+        updateBridgeCount();
+    });
+
+    function drawBridgeSlots() {
+        bridgeSlots.innerHTML = "";
+
+        for (let i = 0; i < bridgeHeight; i++) {
+            const slot = document.createElement("div");
+            slot.className = "bridge-slot";
+
+            if (i < placedBlocks) {
+                slot.classList.add("filled");
+            }
+
+            bridgeSlots.appendChild(slot);
+        }
+    }
+
+    function updateBridgeCount() {
+        document.getElementById("bridge-count").textContent =
+            placedBlocks + " / " + bridgeHeight + " blocks";
+    }
+
+    storageBlocks.addEventListener("click", () => {
+        // Individual blocks handle their own clicks.
+    });
+
+    buildButton.addEventListener("click", () => {
+        if (stage !== "building") return;
+
+        if (removedBlocks < bridgeHeight) {
+            message.textContent = "TOO SHORT! :(";
+            message.className = "game-message error";
+
+            setTimeout(() => {
+                newProblemSame();
+            }, 1800);
+
+            return;
+        }
+
+        if (placedBlocks < bridgeHeight) {
+            message.textContent = "Add blocks to the bridge first!";
+            message.className = "game-message error";
+            return;
+        }
+
+        stage = "complete";
+
+        message.textContent = "You did it! Great sharing!";
+        message.className = "game-message success";
+
+        buildButton.disabled = true;
+
+        setTimeout(() => {
+            newProblem();
+        }, 2500);
+    });
+
+    // When a removed block is selected, tap a bridge slot to place it.
+    bridgeSlots.addEventListener("click", (event) => {
+        if (stage !== "building") return;
+        if (!event.target.classList.contains("bridge-slot")) return;
+        if (event.target.classList.contains("filled")) return;
+        if (selectedBlock === null) return;
+
+        placedBlocks++;
+        selectedBlock = null;
+
+        drawBridgeSlots();
+        drawStorage();
+        updateBridgeCount();
+    });
+
+    function newProblemSame() {
+        // Retry the exact same numbers.
+        removedBlocks = 0;
+        placedBlocks = 0;
+        selectedBlock = null;
+        stage = "removing";
+
+        message.textContent = "";
+        message.className = "game-message";
+
+        buildingSection.classList.add("hidden");
+        driveButton.classList.remove("hidden");
+        driveButton.disabled = true;
+        buildButton.disabled = false;
+
+        instructions.textContent =
+            "Try again! Drag blocks off the car until it fits under the bridge.";
+
+        drawCarBlocks();
+        drawStorage();
+        updateCounts();
+    }
+
+    document.getElementById("new-game-button")
+        .addEventListener("click", newProblem);
+
+    newProblem();
+</script>
+
 </body>
 </html>
